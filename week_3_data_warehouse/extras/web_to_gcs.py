@@ -8,13 +8,14 @@ from google.cloud import storage
 Pre-reqs: 
 1. `pip install pandas pyarrow google-cloud-storage`
 2. Set GOOGLE_APPLICATION_CREDENTIALS to your project/service-account key
+E:/DE/gcp/dtc-de-391023-d08e70622ac2.json
 3. Set GCP_GCS_BUCKET as your bucket or change default value of BUCKET
 """
 
-# services = ['fhv','green','yellow']
+services = ['fhv','green','yellow']
 init_url = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/'
 # switch out the bucketname
-BUCKET = os.environ.get("GCP_GCS_BUCKET", "dtc-data-lake-bucketname")
+BUCKET = os.environ.get("GCP_GCS_BUCKET", "project-de-zoomcamp-yw")
 
 
 def upload_to_gcs(bucket, object_name, local_file):
@@ -31,6 +32,19 @@ def upload_to_gcs(bucket, object_name, local_file):
     blob = bucket.blob(object_name)
     blob.upload_from_filename(local_file)
 
+def transform_schema(df, service):
+    if service=='yellow':
+        columns = ['VendorID','RatecodeID','PULocationID','DOLocationID','payment_type','passenger_count']
+        for col in columns:
+            if df[col].dtype == int:
+                continue
+            df[col].fillna(0, inplace=True)
+            df[col] = df[col].astype(int)
+        df['store_and_fwd_flag'] = df['store_and_fwd_flag'].astype(bool)
+        df['tpep_pickup_datetime'] = pd.to_datetime(df['tpep_pickup_datetime'])
+        df['tpep_dropoff_datetime'] = pd.to_datetime(df['tpep_dropoff_datetime'])
+        
+    return df
 
 def web_to_gcs(year, service):
     for i in range(12):
@@ -43,14 +57,19 @@ def web_to_gcs(year, service):
         file_name = f"{service}_tripdata_{year}-{month}.csv.gz"
 
         # download it using requests via a pandas df
-        request_url = f"{init_url}{service}/{file_name}"
-        r = requests.get(request_url)
-        open(file_name, 'wb').write(r.content)
-        print(f"Local: {file_name}")
+        #request_url = f"{init_url}{service}/{file_name}"
+        #r = requests.get(request_url)
+        #open(file_name, 'wb').write(r.content)
+        #print(f"Local: {file_name}")
 
         # read it back into a parquet file
         df = pd.read_csv(file_name, compression='gzip')
+        #file_name = file_name.replace('.csv.gz', '.csv')
+        #df.to_csv(file_name,index=False)
+        
+        # ingest as .parquet
         file_name = file_name.replace('.csv.gz', '.parquet')
+        df = transform_schema(df,service)
         df.to_parquet(file_name, engine='pyarrow')
         print(f"Parquet: {file_name}")
 
@@ -58,9 +77,12 @@ def web_to_gcs(year, service):
         upload_to_gcs(BUCKET, f"{service}/{file_name}", file_name)
         print(f"GCS: {service}/{file_name}")
 
-
-web_to_gcs('2019', 'green')
-web_to_gcs('2020', 'green')
-# web_to_gcs('2019', 'yellow')
-# web_to_gcs('2020', 'yellow')
+web_to_gcs('2019', 'yellow')
+web_to_gcs('2020', 'yellow')
+#web_to_gcs('2019', 'fhv')
+#for service in services:
+#    web_to_gcs('2019', service)
+#    if service=='fhv':
+#        continue
+#    web_to_gcs('2020', service)
 
