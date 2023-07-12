@@ -41,7 +41,8 @@ from tripdata
 where rn = 1
 
 
--- dbt build --m <model.sql> --var 'is_test_run: false'
+-- dbt build --select <model.sql> --vars 'is_test_run: false'
+-- dbt run --select <stg_green_tripdata.sql> –vars 'is_test_run: false'
 {% if var('is_test_run', default=true) %}
 
   limit 100
