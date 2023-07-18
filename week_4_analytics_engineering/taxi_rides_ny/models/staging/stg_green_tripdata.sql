@@ -20,7 +20,13 @@ select
     cast(lpep_dropoff_datetime as timestamp) as dropoff_datetime,
     
     -- trip info
-    store_and_fwd_flag,
+    -- cast(store_and_fwd_flag as boolean) as store_and_fwd_flag,
+    CASE
+        WHEN store_and_fwd_flag = 'Y' THEN TRUE
+        WHEN store_and_fwd_flag = 'N' THEN FALSE
+        ELSE NULL
+    END AS store_and_fwd_flag,
+    -- store_and_fwd_flag,
     cast(passenger_count as integer) as passenger_count,
     cast(trip_distance as numeric) as trip_distance,
     cast(trip_type as integer) as trip_type,
@@ -41,7 +47,8 @@ from tripdata
 where rn = 1
 
 
--- dbt build --m <model.sql> --var 'is_test_run: false'
+-- dbt build --select <model.sql> --vars 'is_test_run: false'
+-- dbt run --select <stg_green_tripdata.sql> –vars 'is_test_run: false'
 {% if var('is_test_run', default=true) %}
 
   limit 100
