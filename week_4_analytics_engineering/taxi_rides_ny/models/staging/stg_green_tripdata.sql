@@ -25,7 +25,7 @@ select
     --     WHEN store_and_fwd_flag = 'Y' THEN TRUE
     --     WHEN store_and_fwd_flag = 'N' THEN FALSE
     --     ELSE NULL
-    END AS store_and_fwd_flag,
+    -- END AS store_and_fwd_flag,
     store_and_fwd_flag,
     cast(passenger_count as integer) as passenger_count,
     cast(trip_distance as numeric) as trip_distance,
