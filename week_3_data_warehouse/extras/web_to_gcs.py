@@ -57,15 +57,15 @@ def web_to_gcs(year, service):
         file_name = f"{service}_tripdata_{year}-{month}.csv.gz"
 
         # download it using requests via a pandas df
-        #request_url = f"{init_url}{service}/{file_name}"
-        #r = requests.get(request_url)
-        #open(file_name, 'wb').write(r.content)
-        #print(f"Local: {file_name}")
+        request_url = f"{init_url}{service}/{file_name}"
+        r = requests.get(request_url)
+        open(file_name, 'wb').write(r.content)
+        print(f"Local: {file_name}")
 
         # read it back into a parquet file
         df = pd.read_csv(file_name, compression='gzip')
         #file_name = file_name.replace('.csv.gz', '.csv')
-        #df.to_csv(file_name,index=False)
+        #df.to_csv(file_name, index=False)
         
         # ingest as .parquet
         file_name = file_name.replace('.csv.gz', '.parquet')
